@@ -1,0 +1,27 @@
+﻿@model List<Jobsity.Chatroom.Models.MessageViewModel>
+@{
+}
+<div class="text-center">
+    <ul>
+        @if (Model != null)
+        {
+            foreach (var item in Model)
+            {
+                if (item.UserName == User.Identity.Name)
+                {
+                    <li style="text-align:right">
+                        @item.TimeStamp.ToString("MM/dd/yyyy hh:mm")<br />
+                        you said: @item.Content
+                    </li>
+                }
+                else
+                {
+                    <li style="text-align:left">
+                        @item.TimeStamp.ToString("MM/dd/yyyy hh:mm")<br />
+                        @item.UserName said: @item.Content
+                    </li>
+                }
+            }
+        }
+    </ul>
+</div>

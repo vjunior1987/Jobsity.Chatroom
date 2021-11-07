@@ -1,0 +1,15 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Jobsity Chatroom</h1>
+</div>
+<div class="text-center" id="divChatbox" style="max-height:400px; overflow-y:scroll">
+    @Html.Partial("_Chatbox")
+</div>
+<div class="text-center">
+    <input id="inpstrTextbox" placeholder="say something..."/><button id="send">Send</button>
+</div>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/js/Chatroom.js"></script>
