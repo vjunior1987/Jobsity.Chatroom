@@ -16,12 +16,13 @@ function retrieveMsg() {
             setTimeout(retrieveMsg, 5000);
         },
         error: function (error) {
-            alert(error);
         }
     })
 }
 
 $("#send").on('click', function () {
+    var message = $("#inpstrTextbox").val();
+    if (message && message != "") {
     $.ajax({
         url: "/Home/SendMessage",
         type: "POST",
@@ -32,5 +33,6 @@ $("#send").on('click', function () {
         complete: function() {
             $("#inpstrTextbox").val('');
         }
-    });
+        });
+    }
 });
