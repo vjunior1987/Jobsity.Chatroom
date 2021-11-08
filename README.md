@@ -18,4 +18,6 @@ Hello! This is my submission for the Jobsity coding challenge in Asp Net Core.
 
 
 ### Bonus requirements met
+- v0.1 Microsoft Identity for authorization
 - v0.2 Treated different exceptions for Stock bot. It will return messages whether it didn't understand the command, the user asked for help or an error occurs.
+- v0.3 Multiple chatrooms
