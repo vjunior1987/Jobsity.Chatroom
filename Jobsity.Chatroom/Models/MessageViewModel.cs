@@ -10,5 +10,6 @@ namespace Jobsity.Chatroom.Models
         public string Content { get; set; }
         public DateTime TimeStamp { get; set; }
         public string UserName { get; set; }
+        public int ChatroomId { get; set; }
     }
 }

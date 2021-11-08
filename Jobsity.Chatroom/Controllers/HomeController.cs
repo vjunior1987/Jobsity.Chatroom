@@ -36,7 +36,7 @@ namespace Jobsity.Chatroom.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SendMessage(string message)
+        public async Task<IActionResult> SendMessage(string message, int chatId)
         {
             try
             {
@@ -44,7 +44,8 @@ namespace Jobsity.Chatroom.Controllers
                 {
                     Content = message,
                     TimeStamp = DateTime.Now,
-                    UserName = User.Identity.Name
+                    UserName = User.Identity.Name,
+                    ChatroomId = chatId
                 });
                 return Ok();
             }
@@ -54,13 +55,18 @@ namespace Jobsity.Chatroom.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves messages from database and returns partial chatbox
+        /// </summary>
+        /// <param name="chatId"></param>
+        /// <returns></returns>
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> RetrieveMessage(string message)
+        public async Task<IActionResult> RetrieveMessage(int chatId)
         {
             try
             {
-                var messageList = await service.ReceiveMessages();
+                var messageList = await service.ReceiveMessages(chatId);
                 return PartialView("_ChatBox", messageList);
             }
             catch (Exception ex)

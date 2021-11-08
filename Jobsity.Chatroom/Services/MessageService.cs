@@ -11,6 +11,7 @@ using Jobsity.Chatroom.Data.Entities;
 using RabbitMQ.Client;
 using System.Text;
 using RabbitMQ.Client.Events;
+using Microsoft.EntityFrameworkCore;
 
 namespace Jobsity.Chatroom.Services
 {
@@ -26,27 +27,38 @@ namespace Jobsity.Chatroom.Services
             this.repository = repository;
             this.mapper = mapper;
         }
-        public async Task<List<MessageViewModel>> ReceiveMessages()
+
+        /// <summary>
+        /// Retrieves messages from database
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<MessageViewModel>> ReceiveMessages(int chatId)
         {
-            var list = repository.RetrieveMessages().ToList();
-            ConsumerRabbitMQ();
+            //Listen for Bot messages
+            ConsumerRabbitMQ(chatId);
+            var list = await repository.RetrieveMessages().Where(x => x.ChatroomId == chatId).ToListAsync();
             return mapper.Map<List<MessageViewModel>>(list);
         }
 
+        /// <summary>
+        ///  Post messages to database
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public async Task SendMessage(MessageViewModel message)
         {
             //Handle command inputs
             if (!string.IsNullOrWhiteSpace(message.Content) && message.Content[0] == '/')
                 using (var client = new HttpClient())
                 {
-                    await SendBotMessage(message.Content);
+                    await SendBotMessage(message.Content, message.ChatroomId);
                 }
             else
                 await repository.SetMessage(mapper.Map<Message>(message));
         }
 
         #region Send Message through RabbiMQ
-        private async Task SendBotMessage(string command)
+        private async Task SendBotMessage(string command, int chatId)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -58,7 +70,7 @@ namespace Jobsity.Chatroom.Services
                                      autoDelete: false,
                                      arguments: null);
 
-                string message = command;
+                string message = chatId.ToString() + "|" + command;
                 var body = Encoding.UTF8.GetBytes(message);
 
                 channel.BasicPublish(exchange: "",
@@ -71,7 +83,7 @@ namespace Jobsity.Chatroom.Services
 
         #region Retrieve bot messages
 
-        private void ConsumerRabbitMQ()
+        private void ConsumerRabbitMQ(int chatId)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -82,17 +94,20 @@ namespace Jobsity.Chatroom.Services
                 Console.WriteLine(" [*] Waiting for messages.");
 
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += async (model, ea) =>
+                consumer.Received += (model, ea) =>
                 {
                     var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    await SendMessage(new MessageViewModel
+                    var message = Encoding.UTF8.GetString(body).Split('|');
+                    if(Int32.TryParse(message[0], out int chatroomId))
                     {
-                        TimeStamp = DateTime.Now,
-                        Content = message,
-                        UserName = "Stock Bot"
-                    });
-                    Console.WriteLine("Message [{0}] received from bot", message);
+                        SendMessage(new MessageViewModel
+                        {
+                            TimeStamp = DateTime.Now,
+                            Content = message[1],
+                            UserName = "Stock Bot",
+                            ChatroomId = chatroomId
+                        });
+                    }
                 };
                 channel.BasicConsume(queue: "bot1", autoAck: true, consumer: consumer);
             };

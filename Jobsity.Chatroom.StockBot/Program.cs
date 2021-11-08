@@ -21,22 +21,25 @@ namespace Jobsity.Chatroom.StockBot
             using (var channel = connection.CreateModel())
             {
                 channel.QueueDeclare(queue: "chat1", durable: false, exclusive: false, autoDelete: false, arguments: null);
-                
+
                 Console.WriteLine(" [*] Waiting for messages.");
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += async (model, ea) =>
                 {
                     var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var returnBody = Encoding.UTF8.GetBytes(await GetStockQueue(message));
-                    channel.BasicPublish(exchange: "",
-                                             routingKey: "bot1",
-                                             mandatory: false,
-                                             basicProperties: null,
-                                             body: returnBody);
+                    var message = Encoding.UTF8.GetString(body).Split('|');
+                    if (Int32.TryParse(message[0], out int chatroomId))
+                    {
+                        var returnBody = Encoding.UTF8.GetBytes(message[0] + "|" + await GetStockQueue(message[1]));
+                        channel.BasicPublish(exchange: "",
+                                                 routingKey: "bot1",
+                                                 mandatory: false,
+                                                 basicProperties: null,
+                                                 body: returnBody);
 
-                    Console.WriteLine(" [x] Received {0}", message);
+                        Console.WriteLine(" [x] Received {0}", message);
+                    }
                 };
                 channel.BasicConsume(queue: "chat1", autoAck: true, consumer: consumer);
 

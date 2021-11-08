@@ -5,11 +5,23 @@
 <div class="text-center">
     <h1 class="display-4">Welcome to Jobsity Chatroom</h1>
 </div>
-<div class="text-center" id="divChatbox" style="max-height:400px; overflow-y:scroll">
-    @Html.Partial("_Chatbox")
-</div>
 <div class="text-center">
-    <input id="inpstrTextbox" placeholder="say something..."/><button id="send">Send</button>
+    <h3>Chatroom 1</h3>
+</div>
+<div class="row">
+    <div class="col-2">
+        <button class="btn btn-info chat1" disabled="disabled" onclick="changeChatroom(1)">Chatroom 1</button>
+        <br /><br />
+        <button class="btn btn-info chat2" onclick="changeChatroom(2)">Chatroom 2</button>
+    </div>
+    <div class="col-10">
+        <div class="text-center" id="divChatbox" style="max-height:400px; overflow-y:scroll">
+            @Html.Partial("_Chatbox")
+        </div>
+        <div class="text-center">
+            <input id="inpstrTextbox" placeholder="say something..." /> <button class="btn btn-primary" id="send">Send</button>
+        </div>
+    </div>
 </div>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/js/Chatroom.js"></script>

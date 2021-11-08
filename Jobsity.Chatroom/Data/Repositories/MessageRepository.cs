@@ -20,7 +20,7 @@ namespace Jobsity.Chatroom.Data.Repositories
 
         public IQueryable<Message> RetrieveMessages()
         {
-            return context.Message.OrderBy(x => x.TimeStamp).Take(50);
+            return context.Message.OrderByDescending(x => x.TimeStamp).Take(50).OrderBy(x => x.TimeStamp);
         }
 
         public async Task SetMessage(Message entity)
