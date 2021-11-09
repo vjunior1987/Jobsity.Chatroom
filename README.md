@@ -13,7 +13,7 @@ Hello! This is my submission for the Jobsity coding challenge in Asp Net Core.
 
 # To test the solution
 - First, execute the docker command above, and have the RabbitMQ container running in the background
-- This project contains a decoupled bot that needs to be executed separately, in order to receive and process commands. Run it in a separate instance.
+- Install the Stock Bot and execute it before running the web application. Alternatively, you can execute the Console project in a separate instance
 - Another instance might be required should you wish to test different users simultaneously
 
 
@@ -21,3 +21,4 @@ Hello! This is my submission for the Jobsity coding challenge in Asp Net Core.
 - v0.1 Microsoft Identity for authorization
 - v0.2 Treated different exceptions for Stock bot. It will return messages whether it didn't understand the command, the user asked for help or an error occurs.
 - v0.3 Multiple chatrooms
+- v0.4 Added installer for the Stock Bot using WIX
