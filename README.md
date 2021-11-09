@@ -14,7 +14,8 @@ Hello! This is my submission for the Jobsity coding challenge in Asp Net Core.
 # To test the solution
 - First, execute the docker command above, and have the RabbitMQ container running in the background
 - Install the Stock Bot <a href="https://drive.google.com/file/d/1DYbNqeHhC78SeihF_5iHgDYNNP2hZBvR/view?usp=sharing ">x64</a> or <a href="https://drive.google.com/file/d/14juKqatI69KpuhBbIFQx5g9wbzxcd0x2/view?usp=sharing">x86</a> and execute it before running the web application. Alternatively, you can execute the Console project in a separate instance.
-- Another instance might be required should you wish to test different users simultaneously
+- Once that is set, execute the web application Jobsity.Chatroom. The web application might prompt you to migrate the database definitions upon user registration the first time.
+- Run another instance of the web application should you wish to test different users simultaneously
 
 
 ### Bonus requirements met
