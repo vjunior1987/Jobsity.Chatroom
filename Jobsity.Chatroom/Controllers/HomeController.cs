@@ -55,6 +55,21 @@ namespace Jobsity.Chatroom.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> PublishBotMessage(MessageViewModel message)
+        {
+            try
+            {
+                await service.SendMessage(message);
+                return Ok();
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
         /// <summary>
         /// Retrieves messages from database and returns partial chatbox
         /// </summary>

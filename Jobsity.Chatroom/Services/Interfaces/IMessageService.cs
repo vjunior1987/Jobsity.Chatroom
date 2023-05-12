@@ -10,6 +10,5 @@ namespace Jobsity.Chatroom.Services.Interfaces
     {
         Task<List<MessageViewModel>> RetrieveMessages(int chatId);
         Task SendMessage(MessageViewModel message);
-        void ConsumerRabbitMQ(int chatId);
     }
 }

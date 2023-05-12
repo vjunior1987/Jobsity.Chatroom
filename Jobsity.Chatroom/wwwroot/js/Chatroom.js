@@ -15,8 +15,26 @@ connection.on("ReceiveMessage", function () {
     retrieveMsg();
 });
 
-connection.on("ReceiveBotMessage", function (message) {
-    $("#chatroomList").append(`<li style="text-align:left">${message.timeStamp}<br/>${message.userName} said: ${message.content}</li>`)
+connection.on("RequestBotMessage", function (chatid) {
+    if (chatId) {
+        connection.invoke("ConsumerMessageBus").catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
+});
+
+connection.on("PublishBotMessage", function (message) {
+    $.ajax({
+        url: "/Home/PublishBotMessage",
+        type: "POST",
+        data: message,
+        error: function (err) {
+            alert(err.message);
+        },
+        complete: function () {
+            $("#inpstrTextbox").val('');
+        }
+    });
 });
 
 connection.start().then(function () {
@@ -47,17 +65,24 @@ function retrieveMsg() {
 $("#send").on('click', function () {
     var message = $("#inpstrTextbox").val();
     if (message && message !== "") {
-    $.ajax({
-        url: "/Home/SendMessage",
-        type: "POST",
-        data: { message: $("#inpstrTextbox").val(), chatId },
-        error: function (error) {
-            alert(error.message);
-        },
-        complete: function() {
+        if (message.indexOf('/', 0) !== -1) {
+            connection.invoke("SendBotMessage", message, chatId).catch(function (err) {
+                return console.error(err.toString());
+            });
             $("#inpstrTextbox").val('');
+        } else {
+            $.ajax({
+                url: "/Home/SendMessage",
+                type: "POST",
+                data: { message: $("#inpstrTextbox").val(), chatId },
+                error: function (err) {
+                    alert(err.message);
+                },
+                complete: function () {
+                    $("#inpstrTextbox").val('');
+                }
+            });
         }
-        });
     }
 });
 

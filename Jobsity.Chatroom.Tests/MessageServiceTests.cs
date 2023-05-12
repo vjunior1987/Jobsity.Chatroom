@@ -22,10 +22,6 @@ namespace Jobsity.Chatroom.Tests
 {
     public class MessageServiceTests
     {
-        private const int chatId = 1;
-        private const string userName = "TestUser001";
-        private const string content = "Test 001";
-        private DateTime timeStamp = DateTime.Now;
         private readonly IMessageService _messageService;
         private readonly IMessageRepository _messageRepository;
         private readonly IMapper _mapper;
@@ -43,7 +39,7 @@ namespace Jobsity.Chatroom.Tests
         public async Task MessageService_SendMessage_HappyPath()
         {
             // Arrange
-            MessageViewModel message = GetMessageViewModel(1);
+            MessageViewModel message = TestCommons.GetMessageViewModel(1);
 
             _messageRepository.SendMessage(Arg.Any<Message>()).Returns(_ => Task.CompletedTask);
 
@@ -68,68 +64,11 @@ namespace Jobsity.Chatroom.Tests
             messages.ToList().SequenceEqual(result);
         }
 
-        [Fact, Description("Happy path for sending bot command happy path")]
-        public async Task MessageService_SendBotMessage_HappyPath()
-        {
-            // Arrange
-            var message = GetMessageViewModel(1, "/stock=ALE");
-
-            // Act
-            await _messageService.SendMessage(message);
-
-            // Assert
-            await _messageRepository.DidNotReceive().SendMessage(Arg.Any<Message>());
-        }
-
-        [Fact, Description("Happy path for sending bot help command")]
-        public async Task MessageService_SendBotMessageWithHelp_HappyPath()
-        {
-            // Arrange
-            var message = GetMessageViewModel(1, "/help");
-
-            // Act
-            await _messageService.SendMessage(message);
-
-            // Assert
-            await _messageRepository.DidNotReceive().SendMessage(Arg.Any<Message>());
-        }
-
-
-        [Fact, Description("Exception path for sending bot command with invalid code")]
-        public void MessageService_SendBotMessageCommandWithInvalidCode_Fail()
-        {
-            // Arrange
-            var message = GetMessageViewModel(1, "/stock=test001");
-            message.Content = null;
-
-            // Act
-            async Task SendMessage() => await _messageService.SendMessage(message);
-
-            // Assert
-            Assert.ThrowsAsync<ArgumentException>(SendMessage);
-        }
-
-
-        [Fact, Description("Exception path for sending bot invalid command")]
-        public void MessageService_SendBotMessageWithInvalidCommand_Fail()
-        {
-            // Arrange
-            var message = GetMessageViewModel(1, "/test");
-            message.Content = null;
-
-            // Act
-            async Task SendMessage() => await _messageService.SendMessage(message);
-
-            // Assert
-            Assert.ThrowsAsync<ArgumentException>(SendMessage);
-        }
-
-
         [Fact, Description("Exception path for sending message with no user logged in")]
         public void MessageService_SendMessageWithNoUserSession_Fail()
         {
             // Arrange
-            var message = GetMessageViewModel(1);
+            var message = TestCommons.GetMessageViewModel(1);
             message.UserName = null;
 
             // Act
@@ -143,7 +82,7 @@ namespace Jobsity.Chatroom.Tests
         public void messageservice_sendmessagewithnomessage_fail()
         {
             // Arrange
-            var message = GetMessageViewModel(1);
+            var message = TestCommons.GetMessageViewModel(1);
             message.Content = null;
 
             // Act
@@ -153,23 +92,11 @@ namespace Jobsity.Chatroom.Tests
             Assert.ThrowsAsync<ArgumentException>(SendMessage);
         }
 
-        private MessageViewModel GetMessageViewModel(int chatroomId, string message = content)
-        {
-            return new MessageViewModel
-            {
-                ChatroomId = chatroomId,
-                TimeStamp = timeStamp,
-                UserName = userName,
-                Content = message
-            };
-        }
-
-
         private IEnumerable<MessageViewModel> GetMessageViewModels(int chatroomId)
         {
-            yield return GetMessageViewModel(chatroomId);
-            yield return GetMessageViewModel(chatroomId);
-            yield return GetMessageViewModel(chatroomId);
+            yield return TestCommons.GetMessageViewModel(chatroomId);
+            yield return TestCommons.GetMessageViewModel(chatroomId);
+            yield return TestCommons.GetMessageViewModel(chatroomId);
         }
     }
 

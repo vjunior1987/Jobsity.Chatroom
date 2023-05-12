@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Jobsity.Chatroom.Commons\Jobsity.Chatroom.Commons.csproj" />
     <ProjectReference Include="..\Jobsity.Chatroom\Jobsity.Chatroom.csproj" />
   </ItemGroup>
 
