@@ -7,6 +7,6 @@ namespace Jobsity.Chatroom.Data.Interfaces
     public interface IMessageRepository
     {
         IQueryable<Message> RetrieveMessages();
-        Task SetMessage(Message entity);
+        Task SendMessage(Message entity);
     }
 }

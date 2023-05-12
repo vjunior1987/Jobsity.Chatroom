@@ -23,7 +23,7 @@ namespace Jobsity.Chatroom.Data.Repositories
             return context.Message.OrderByDescending(x => x.TimeStamp).Take(50).OrderBy(x => x.TimeStamp);
         }
 
-        public async Task SetMessage(Message entity)
+        public async Task SendMessage(Message entity)
         {
             await context.Message.AddAsync(entity);
             context.SaveChanges();

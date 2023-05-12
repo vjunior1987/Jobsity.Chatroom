@@ -54,7 +54,7 @@ namespace Jobsity.Chatroom.Services
                     await SendBotMessage(message.Content, message.ChatroomId);
                 }
             else
-                await repository.SetMessage(mapper.Map<Message>(message));
+                await repository.SendMessage(mapper.Map<Message>(message));
         }
 
         #region Send Message through RabbiMQ
