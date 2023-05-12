@@ -8,7 +8,8 @@ namespace Jobsity.Chatroom.Services.Interfaces
 {
     public interface IMessageService
     {
-        Task<List<MessageViewModel>> ReceiveMessages(int chatId);
+        Task<List<MessageViewModel>> RetrieveMessages(int chatId);
         Task SendMessage(MessageViewModel message);
+        void ConsumerRabbitMQ(int chatId);
     }
 }

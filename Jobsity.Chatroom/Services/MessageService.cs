@@ -12,6 +12,9 @@ using RabbitMQ.Client;
 using System.Text;
 using RabbitMQ.Client.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using Jobsity.Chatroom.Hubs;
+using System.Threading;
 
 namespace Jobsity.Chatroom.Services
 {
@@ -20,24 +23,27 @@ namespace Jobsity.Chatroom.Services
     /// </summary>
     public class MessageService : IMessageService
     {
-        private readonly IMessageRepository repository;
-        private readonly IMapper mapper;
-        public MessageService(IMessageRepository repository, IMapper mapper)
+        private readonly IMessageRepository _repository;
+        private readonly IMapper _mapper;
+        private readonly IHubContext<ChatroomHub> _hubcontext;
+
+        public MessageService(IMessageRepository repository, IMapper mapper, IHubContext<ChatroomHub> hubContext)
         {
-            this.repository = repository;
-            this.mapper = mapper;
+            _repository = repository;
+            _mapper = mapper;
+            _hubcontext = hubContext;
         }
 
         /// <summary>
         /// Retrieves messages from database
         /// </summary>
         /// <returns></returns>
-        public async Task<List<MessageViewModel>> ReceiveMessages(int chatId)
+        public async Task<List<MessageViewModel>> RetrieveMessages(int chatId)
         {
             //Listen for Bot messages
             ConsumerRabbitMQ(chatId);
-            var list = await repository.RetrieveMessages().Where(x => x.ChatroomId == chatId).ToListAsync();
-            return mapper.Map<List<MessageViewModel>>(list);
+            var list = await _repository.RetrieveMessages().Where(x => x.ChatroomId == chatId).ToListAsync();
+            return _mapper.Map<List<MessageViewModel>>(list);
         }
 
         /// <summary>
@@ -51,13 +57,22 @@ namespace Jobsity.Chatroom.Services
             //Handle command inputs
             if (message.ValidObject())
             {
-                if (!string.IsNullOrWhiteSpace(message.Content) && message.Content[0] == '/')
+                if (message.Content[0] == '/')
+                {
                     using (var client = new HttpClient())
                     {
                         await SendBotMessage(message.Content, message.ChatroomId);
+                        Thread.Sleep(2000);
+                        ConsumerRabbitMQ(message.ChatroomId);
                     }
+                }
                 else
-                    await repository.SendMessage(mapper.Map<Message>(message));
+                {
+                    await _repository.SendMessage(_mapper.Map<Message>(message));
+                    await _hubcontext.Clients.All.SendAsync("ReceiveMessage", message);
+                }
+
+
             }
             else
             {
@@ -91,7 +106,7 @@ namespace Jobsity.Chatroom.Services
 
         #region Retrieve bot messages
 
-        private void ConsumerRabbitMQ(int chatId)
+        public void ConsumerRabbitMQ(int chatId)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -108,13 +123,14 @@ namespace Jobsity.Chatroom.Services
                     var message = Encoding.UTF8.GetString(body).Split('|');
                     if (Int32.TryParse(message[0], out int chatroomId))
                     {
-                        SendMessage(new MessageViewModel
+                        var botResponse = new Message
                         {
                             TimeStamp = DateTime.Now,
                             Content = message[1],
                             UserName = "Stock Bot",
                             ChatroomId = chatroomId
-                        });
+                        };
+                        _hubcontext.Clients.All.SendAsync("ReceiveBotMessage", botResponse);
                     }
                 };
                 channel.BasicConsume(queue: "bot1", autoAck: true, consumer: consumer);

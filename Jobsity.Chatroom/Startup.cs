@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using Jobsity.Chatroom.Data;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Jobsity.Chatroom.Data.Interfaces;
 using Jobsity.Chatroom.Data.Repositories;
-using AutoMapper;
-using Jobsity.Chatroom.Services.Interfaces;
+using Jobsity.Chatroom.Hubs;
 using Jobsity.Chatroom.Services;
+using Jobsity.Chatroom.Services.Interfaces;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Jobsity.Chatroom
 {
@@ -51,6 +47,7 @@ namespace Jobsity.Chatroom
             services.AddScoped<IMessageService, MessageService>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddAutoMapper(typeof(Startup));
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,6 +72,12 @@ namespace Jobsity.Chatroom
             app.UseAuthentication();
 
             context.Database.Migrate();
+
+            // Set up the hub routes here:
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<ChatroomHub>("/chatroomHub");
+            });
 
             app.UseMvc(routes =>
             {

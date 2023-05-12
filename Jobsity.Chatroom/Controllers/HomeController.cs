@@ -66,7 +66,7 @@ namespace Jobsity.Chatroom.Controllers
         {
             try
             {
-                var messageList = await service.ReceiveMessages(chatId);
+                var messageList = await service.RetrieveMessages(chatId);
                 return PartialView("_ChatBox", messageList);
             }
             catch (Exception ex)

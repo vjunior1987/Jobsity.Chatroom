@@ -2,9 +2,11 @@ using AutoMapper;
 using Jobsity.Chatroom.Data.Entities;
 using Jobsity.Chatroom.Data.Interfaces;
 using Jobsity.Chatroom.Data.MappingProfiles;
+using Jobsity.Chatroom.Hubs;
 using Jobsity.Chatroom.Models;
 using Jobsity.Chatroom.Services;
 using Jobsity.Chatroom.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -27,14 +29,16 @@ namespace Jobsity.Chatroom.Tests
         private readonly IMessageService _messageService;
         private readonly IMessageRepository _messageRepository;
         private readonly IMapper _mapper;
+        private readonly IHubContext<ChatroomHub> _contextHub;
 
         public MessageServiceTests()
         {
+            _contextHub = Substitute.For<IHubContext<ChatroomHub>>();
             _mapper = new MapperConfiguration(cfg => cfg.AddProfile<MessageProfile>()).CreateMapper();
             _messageRepository = Substitute.For<IMessageRepository>();
-            _messageService = new MessageService(_messageRepository, _mapper);
+            _messageService = new MessageService(_messageRepository, _mapper, _contextHub);
         }
-         
+
         [Fact, Description("Happy path for sending message")]
         public async Task MessageService_SendMessage_HappyPath()
         {
@@ -58,7 +62,7 @@ namespace Jobsity.Chatroom.Tests
             _messageRepository.RetrieveMessages().Returns(new TestAsyncEnumerable<Message>(_mapper.Map<IEnumerable<Message>>(messages)).AsQueryable());
 
             // Act
-            var result = await _messageService.ReceiveMessages(1);
+            var result = await _messageService.RetrieveMessages(1);
 
             // Assert
             messages.ToList().SequenceEqual(result);
@@ -129,7 +133,7 @@ namespace Jobsity.Chatroom.Tests
             message.UserName = null;
 
             // Act
-            async Task SendMessage () => await _messageService.SendMessage(message);
+            async Task SendMessage() => await _messageService.SendMessage(message);
 
             // Assert
             Assert.ThrowsAsync<ArgumentException>(SendMessage);
