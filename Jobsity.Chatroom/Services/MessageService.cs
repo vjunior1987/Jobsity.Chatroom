@@ -47,14 +47,22 @@ namespace Jobsity.Chatroom.Services
         /// <returns></returns>
         public async Task SendMessage(MessageViewModel message)
         {
+
             //Handle command inputs
-            if (!string.IsNullOrWhiteSpace(message.Content) && message.Content[0] == '/')
-                using (var client = new HttpClient())
-                {
-                    await SendBotMessage(message.Content, message.ChatroomId);
-                }
+            if (message.ValidObject())
+            {
+                if (!string.IsNullOrWhiteSpace(message.Content) && message.Content[0] == '/')
+                    using (var client = new HttpClient())
+                    {
+                        await SendBotMessage(message.Content, message.ChatroomId);
+                    }
+                else
+                    await repository.SendMessage(mapper.Map<Message>(message));
+            }
             else
-                await repository.SendMessage(mapper.Map<Message>(message));
+            {
+                throw new ArgumentException();
+            }
         }
 
         #region Send Message through RabbiMQ
@@ -98,7 +106,7 @@ namespace Jobsity.Chatroom.Services
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body).Split('|');
-                    if(Int32.TryParse(message[0], out int chatroomId))
+                    if (Int32.TryParse(message[0], out int chatroomId))
                     {
                         SendMessage(new MessageViewModel
                         {
@@ -112,7 +120,7 @@ namespace Jobsity.Chatroom.Services
                 channel.BasicConsume(queue: "bot1", autoAck: true, consumer: consumer);
             };
         }
-    #endregion
+        #endregion
     }
 }
 

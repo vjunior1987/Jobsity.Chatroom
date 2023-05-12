@@ -12,11 +12,6 @@ namespace Jobsity.Chatroom.StockBot
 {
     class Program
     {
-        private const string chatbotHelpMessage = "Use the command \"/stock=[stock_code]\", where [stock_code] is the identifier of the stock you wish to inquiry";
-        private const string chatbotStockNotFoundMessage = "Stock queue not found. Try again with another code";
-        private const string chatBotCommandNotRecognizedMessage = "command not recognized. Use /help for more info.";
-        private const string chatBotUnkownErrorMessage = "there was an error when executing the command";
-        private const string chatBotStockQuotePerShareMessage = "“{0} quote is ${1} per share”.";
 
         static void Main(string[] args)
         {
@@ -60,10 +55,10 @@ namespace Jobsity.Chatroom.StockBot
                 using (HttpClient client = new HttpClient())
                 {
                     if (command.Trim().ToLower().Contains("/help"))
-                        return chatbotHelpMessage;
+                        return Commons.Constants.CHATBOT_HELP_MESSAGE;
 
                     if (!command.Trim().ToLower().Contains("/stock="))
-                        return chatBotCommandNotRecognizedMessage;
+                        return Commons.Constants.CHATBOT_COMMAND_NOT_RECOGNIZED_MESSAGE;
 
                     var code = command.Trim().ToLower().Replace("/stock=", "");
 
@@ -81,14 +76,14 @@ namespace Jobsity.Chatroom.StockBot
                                 var row = await reader.ReadLineAsync();
                                 if (row.Contains("N/D"))
                                 {
-                                    return chatbotStockNotFoundMessage;
+                                    return Commons.Constants.CHATBOT_STOCK_NOT_FOUND_MESSAGE;
                                 }
                                 var list = row.Split(',');
 
                                 listSymbol.Add(list[0]);
                                 listOpen.Add(list[3]);
                             }
-                            return string.Format(chatBotStockQuotePerShareMessage, listSymbol.LastOrDefault(), listOpen.LastOrDefault());
+                            return string.Format(Commons.Constants.CHATBOT_STOCK_QUOTE_PER_SHARE_MESSAGE, listSymbol.LastOrDefault(), listOpen.LastOrDefault());
                         }
                     }
                     else
@@ -100,7 +95,7 @@ namespace Jobsity.Chatroom.StockBot
             }
             catch (Exception)
             {
-                return chatBotUnkownErrorMessage;
+                return Commons.Constants.CHATBOT_UNKNOWN_ERROR_MESSAGE;
             }
         }
     }

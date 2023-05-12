@@ -11,3 +11,6 @@
 /.vs/Jobsity.Chatroom/v16
 /Jobsity.Chatroom.Tests/bin/Debug/netcoreapp3.1
 /.vs/Jobsity.Chatroom
+/Jobsity.Chatroom.Commons/bin/Debug/netcoreapp2.2
+/Jobsity.Chatroom.Commons/obj
+/Jobsity.Chatroom.Tests/bin/Debug/netcoreapp2.2

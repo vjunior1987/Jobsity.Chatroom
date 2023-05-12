@@ -1,0 +1,260 @@
+using AutoMapper;
+using Jobsity.Chatroom.Data.Entities;
+using Jobsity.Chatroom.Data.Interfaces;
+using Jobsity.Chatroom.Data.MappingProfiles;
+using Jobsity.Chatroom.Models;
+using Jobsity.Chatroom.Services;
+using Jobsity.Chatroom.Services.Interfaces;
+using NSubstitute;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace Jobsity.Chatroom.Tests
+{
+    public class MessageServiceTests
+    {
+        private const int chatId = 1;
+        private const string userName = "TestUser001";
+        private const string content = "Test 001";
+        private DateTime timeStamp = DateTime.Now;
+        private readonly IMessageService _messageService;
+        private readonly IMessageRepository _messageRepository;
+        private readonly IMapper _mapper;
+
+        public MessageServiceTests()
+        {
+            _mapper = new MapperConfiguration(cfg => cfg.AddProfile<MessageProfile>()).CreateMapper();
+            _messageRepository = Substitute.For<IMessageRepository>();
+            _messageService = new MessageService(_messageRepository, _mapper);
+        }
+         
+        [Fact, Description("Happy path for sending message")]
+        public async Task MessageService_SendMessage_HappyPath()
+        {
+            // Arrange
+            MessageViewModel message = GetMessageViewModel(1);
+
+            _messageRepository.SendMessage(Arg.Any<Message>()).Returns(_ => Task.CompletedTask);
+
+            // Act
+            await _messageService.SendMessage(message);
+
+            // Assert
+            await _messageRepository.Received().SendMessage(Arg.Any<Message>());
+        }
+
+        [Fact, Description("Happy path for retrieving messages")]
+        public async Task MessageService_ReceiveMessages_HappyPath()
+        {
+            // Arrange
+            var messages = GetMessageViewModels(1);
+            _messageRepository.RetrieveMessages().Returns(new TestAsyncEnumerable<Message>(_mapper.Map<IEnumerable<Message>>(messages)).AsQueryable());
+
+            // Act
+            var result = await _messageService.ReceiveMessages(1);
+
+            // Assert
+            messages.ToList().SequenceEqual(result);
+        }
+
+        [Fact, Description("Happy path for sending bot command happy path")]
+        public async Task MessageService_SendBotMessage_HappyPath()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1, "/stock=ALE");
+
+            // Act
+            await _messageService.SendMessage(message);
+
+            // Assert
+            await _messageRepository.DidNotReceive().SendMessage(Arg.Any<Message>());
+        }
+
+        [Fact, Description("Happy path for sending bot help command")]
+        public async Task MessageService_SendBotMessageWithHelp_HappyPath()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1, "/help");
+
+            // Act
+            await _messageService.SendMessage(message);
+
+            // Assert
+            await _messageRepository.DidNotReceive().SendMessage(Arg.Any<Message>());
+        }
+
+
+        [Fact, Description("Exception path for sending bot command with invalid code")]
+        public void MessageService_SendBotMessageCommandWithInvalidCode_Fail()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1, "/stock=test001");
+            message.Content = null;
+
+            // Act
+            async Task SendMessage() => await _messageService.SendMessage(message);
+
+            // Assert
+            Assert.ThrowsAsync<ArgumentException>(SendMessage);
+        }
+
+
+        [Fact, Description("Exception path for sending bot invalid command")]
+        public void MessageService_SendBotMessageWithInvalidCommand_Fail()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1, "/test");
+            message.Content = null;
+
+            // Act
+            async Task SendMessage() => await _messageService.SendMessage(message);
+
+            // Assert
+            Assert.ThrowsAsync<ArgumentException>(SendMessage);
+        }
+
+
+        [Fact, Description("Exception path for sending message with no user logged in")]
+        public void MessageService_SendMessageWithNoUserSession_Fail()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1);
+            message.UserName = null;
+
+            // Act
+            async Task SendMessage () => await _messageService.SendMessage(message);
+
+            // Assert
+            Assert.ThrowsAsync<ArgumentException>(SendMessage);
+        }
+
+        [Fact, Description("exception path for sending message with no message")]
+        public void messageservice_sendmessagewithnomessage_fail()
+        {
+            // Arrange
+            var message = GetMessageViewModel(1);
+            message.Content = null;
+
+            // Act
+            async Task SendMessage() => await _messageService.SendMessage(message);
+
+            // Assert
+            Assert.ThrowsAsync<ArgumentException>(SendMessage);
+        }
+
+        private MessageViewModel GetMessageViewModel(int chatroomId, string message = content)
+        {
+            return new MessageViewModel
+            {
+                ChatroomId = chatroomId,
+                TimeStamp = timeStamp,
+                UserName = userName,
+                Content = message
+            };
+        }
+
+
+        private IEnumerable<MessageViewModel> GetMessageViewModels(int chatroomId)
+        {
+            yield return GetMessageViewModel(chatroomId);
+            yield return GetMessageViewModel(chatroomId);
+            yield return GetMessageViewModel(chatroomId);
+        }
+    }
+
+    internal class TestAsyncQueryProvider<TEntity> : Microsoft.EntityFrameworkCore.Query.Internal.IAsyncQueryProvider
+    {
+        private readonly IQueryProvider _inner;
+
+        internal TestAsyncQueryProvider(IQueryProvider inner)
+        {
+            _inner = inner;
+        }
+
+        public IQueryable CreateQuery(Expression expression)
+        {
+            return new TestAsyncEnumerable<TEntity>(expression);
+        }
+
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+        {
+            return new TestAsyncEnumerable<TElement>(expression);
+        }
+
+        public object Execute(Expression expression)
+        {
+            return _inner.Execute(expression);
+        }
+
+        public TResult Execute<TResult>(Expression expression)
+        {
+            return _inner.Execute<TResult>(expression);
+        }
+
+        public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+        {
+            return new TestAsyncEnumerable<TResult>(expression);
+        }
+
+        public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Execute<TResult>(expression));
+        }
+    }
+
+    internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
+    {
+        private readonly IEnumerator<T> _inner;
+
+        public TestAsyncEnumerator(IEnumerator<T> inner)
+        {
+            _inner = inner;
+        }
+
+        public void Dispose()
+        {
+            _inner.Dispose();
+        }
+
+        public T Current
+        {
+            get
+            {
+                return _inner.Current;
+            }
+        }
+
+        public Task<bool> MoveNext(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_inner.MoveNext());
+        }
+    }
+
+    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    {
+        public TestAsyncEnumerable(IEnumerable<T> enumerable)
+            : base(enumerable)
+        { }
+
+        public TestAsyncEnumerable(Expression expression)
+            : base(expression)
+        { }
+
+        public IAsyncEnumerator<T> GetEnumerator()
+        {
+            return new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        }
+
+        IQueryProvider IQueryable.Provider
+        {
+            get { return new TestAsyncQueryProvider<T>(this); }
+        }
+    }
+}
