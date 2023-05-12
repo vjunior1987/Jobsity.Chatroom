@@ -23,7 +23,7 @@ namespace Jobsity.Chatroom.Tests
             _hub = Substitute.For<ChatroomHub>();
         }
 
-        [Fact, Description("Happy path for sending bot command happy path")]
+        [Fact, Description("Should successfully send bot command and receive the stock quote")]
         public async Task ChatroomHub_SendBotMessage_HappyPath()
         {
             // Arrange
@@ -36,7 +36,7 @@ namespace Jobsity.Chatroom.Tests
             AssertConsumerMessageBus("AVE");
         }
 
-        [Fact, Description("Happy path for sending bot help command")]
+        [Fact, Description("Should successfully send bot command and receive the help instructions")]
         public async Task ChatroomHub_SendBotMessageWithHelp_HappyPath()
         {
             // Arrange
@@ -50,7 +50,7 @@ namespace Jobsity.Chatroom.Tests
         }
 
 
-        [Fact, Description("Exception path for sending bot command with invalid code")]
+        [Fact, Description("Should receive error message when sending bot command with invalid code")]
         public async Task ChatroomHub_SendBotMessageCommandWithInvalidCode_Fail()
         {
             // Arrange
@@ -65,7 +65,7 @@ namespace Jobsity.Chatroom.Tests
         }
 
 
-        [Fact, Description("Exception path for sending bot invalid command")]
+        [Fact, Description("Should receive error message when sending invalid bot command")]
         public async Task ChatroomHub_SendBotMessageWithInvalidCommand_Fail()
         {
             // Arrange
